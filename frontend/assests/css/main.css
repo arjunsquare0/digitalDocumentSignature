@@ -1,0 +1,44 @@
+#pdf-container {
+    border: 2px dashed #cbd5e0;
+    min-height: 500px;
+    position: relative;
+  }
+  #pdf-canvas {
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  #signature-pad {
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+  }
+  .signature-font-preview {
+    width: 100%;
+    margin-top: 8px;
+    padding: 4px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .signature-font-preview:hover {
+    background: #e2e8f0;
+  }
+  .signature-font-preview.selected {
+    background: #2563eb;
+    color: white;
+  }
+  .dropzone {
+    border: 2px dashed #cbd5e0;
+    border-radius: 6px;
+    padding: 40px;
+    text-align: center;
+    background-color: #f8fafc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .dropzone.active {
+    border-color: #2563eb;
+    background-color: #ebf8ff;
+  }
