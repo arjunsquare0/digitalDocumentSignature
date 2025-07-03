@@ -1,0 +1,45 @@
+# Node modules
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Dependency lock files (optional: keep if you want reproducible installs)
+# package-lock.json
+# yarn.lock
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Build output
+dist/
+build/
+frontend/dist/
+frontend/build/
+backend/dist/
+backend/build/
+
+# Uploaded files and generated files
+backend/uploads/
+*.log
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Misc
+*.zip
+*.tar
+*.tar.gz

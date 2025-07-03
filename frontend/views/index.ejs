@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Digital Document Signature</title>
-  <link rel="shortcut icon" href="../assets/images/icon.jpg" type="image/x-icon" />
+  <link rel="shortcut icon" href="/assets/images/icon.jpg" type="image/x-icon" />
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Bootstrap Icons -->
@@ -13,10 +13,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
   <!-- Fabric.js for canvas manipulation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <!-- Alpine.js for reactive components -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body class="bg-gray-50">
-  <div id="root" class="container mx-auto px-4 py-8">
+  <div id="root" class="container mx-auto px-4 py-8" x-data="{ activeTab: 'upload', dragging: false, pdfLoaded: false, documentSigned: false, showDebug: false }">
     <header class="text-center mb-10 bg-gradient-to-r from-blue-600 to-indigo-600 py-8 rounded-2xl shadow-lg mx-4">
       <div class="max-w-4xl mx-auto px-6">
         <div class="flex items-center justify-center">
@@ -34,8 +36,32 @@
       </div>
     </header>
 
+    <!-- Debug Info -->
+    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Debug Mode</span>
+        <button @click="showDebug = !showDebug" class="text-sm bg-yellow-500 text-white px-2 py-1 rounded">
+          <span x-show="!showDebug">Show</span>
+          <span x-show="showDebug">Hide</span>
+        </button>
+      </div>
+      <div x-show="showDebug" class="mt-2 text-sm">
+        <p>Alpine.js Status: <span x-text="typeof Alpine !== 'undefined' ? 'Loaded' : 'Not Loaded'"></span></p>
+        <p>Current Tab: <span x-text="activeTab"></span></p>
+        <p>PDF Loaded: <span x-text="pdfLoaded"></span></p>
+        <p>Document Signed: <span x-text="documentSigned"></span></p>
+        <div class="mt-2 space-x-2">
+          <button @click="activeTab = 'upload'" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">Test Upload Tab</button>
+          <button @click="activeTab = 'sign'" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">Test Sign Tab</button>
+          <button @click="activeTab = 'download'" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">Test Download Tab</button>
+          <button @click="pdfLoaded = true" class="px-2 py-1 bg-green-500 text-white text-xs rounded">Set PDF Loaded</button>
+          <button @click="documentSigned = true" class="px-2 py-1 bg-green-500 text-white text-xs rounded">Set Document Signed</button>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-      <div x-data="{ activeTab: 'upload', dragging: false, pdfLoaded: false, documentSigned: false }" class="space-y-6">
+      <div class="space-y-6">
         <!-- Tab Navigation -->
         <div class="flex space-x-2 border-b border-gray-200 pb-1">
           <button @click="activeTab = 'upload'"
@@ -100,7 +126,7 @@
           </div>
 
           <div id="pdf-container" class="hidden">
-            <canvas id="pdf-canvas"></canvas>
+            <canvas id="pdf-preview-canvas"></canvas>
           </div>
         </div>
 
@@ -108,12 +134,11 @@
         <div x-show="activeTab === 'sign'" x-transition>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
-              <div id="signature-zone" class="relative">
-                <!-- The PDF.js canvas (hidden behind Fabric.js) -->
-                <canvas id="pdf-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+              <div id="signature-zone" class="relative border border-gray-300 rounded-lg overflow-hidden">
+                <!-- The PDF.js canvas for rendering -->
+                <canvas id="pdf-render-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
                 <!-- The Fabric.js canvas for signatures -->
-                <canvas id="pdf-canvas-sign" class="w-full relative z-10"></canvas>
-                <!-- Removed the drop-area div as Fabric.js handles interactions -->
+                <canvas id="fabric-canvas" class="w-full h-full relative z-10"></canvas>
               </div>
             </div>
 
@@ -201,8 +226,6 @@
     </footer>
   </div>
 
-  <!-- Alpine.js for reactive components -->
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
-  <script src="../assests/js/main.js"></script>
+  <script src="/assets/js/main.js"></script>
 </body>
 </html>

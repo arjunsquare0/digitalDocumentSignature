@@ -1,0 +1,18 @@
+digitalDocumentSignature/
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   ├── routes/
+│   │   └── api.js
+│   └── utils/
+│       └── pdf-signer.js
+└── frontend/
+    ├── views/
+    |   |──index.ejs
+    └── assets/
+        ├── js/
+        │   ├── main.js
+        ├── css/
+        │   └── main.css
+        └── images/
+            └── icon.jpg
