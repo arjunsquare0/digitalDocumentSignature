@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Document Signature</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    .container { max-width: 600px; margin: auto; }
+    .section { margin-bottom: 2em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Digital Document Signature</h1>
+    <div class="section">
+      <label for="pdfFile">Upload PDF:</label>
+      <input type="file" id="pdfFile" accept="application/pdf">
+      <button onclick="uploadPDF()">Upload</button>
+    </div>
+    <div class="section">
+      <label for="signatureText">Signature Text:</label>
+      <input type="text" id="signatureText" placeholder="Type your signature">
+      <button onclick="signPDF()">Sign & Download</button>
+    </div>
+    <div id="status"></div>
+  </div>
+  <script>
+    const BACKEND_API_URL = 'https://your-backend-service.onrender.com/api'; // Change to your Render backend URL
+
+    let uploadedFile = null;
+
+    document.getElementById('pdfFile').addEventListener('change', function(e) {
+      uploadedFile = e.target.files[0];
+    });
+
+    function uploadPDF() {
+      if (!uploadedFile) {
+        alert('Please select a PDF file.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('pdfFile', uploadedFile);
+
+      fetch(`${BACKEND_API_URL}/upload-pdf`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('status').innerText = 'PDF uploaded! Now enter your signature and click "Sign & Download".';
+      })
+      .catch(err => {
+        document.getElementById('status').innerText = 'Upload failed.';
+      });
+    }
+
+    function signPDF() {
+      const signature = document.getElementById('signatureText').value;
+      if (!uploadedFile || !signature) {
+        alert('Please upload a PDF and enter a signature.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('pdfFile', uploadedFile);
+      formData.append('signatureType', 'text');
+      formData.append('signatureData', signature);
+      formData.append('x', 50); // Example position
+      formData.append('y', 50); // Example position
+      formData.append('pageNumber', 1);
+      formData.append('font', 'Helvetica');
+      formData.append('fontSize', 24);
+      formData.append('color', '#000000');
+
+      fetch(`${BACKEND_API_URL}/sign-pdf`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'signed_document.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        document.getElementById('status').innerText = 'Signed PDF downloaded!';
+      })
+      .catch(err => {
+        document.getElementById('status').innerText = 'Signing failed.';
+      });
+    }
+  </script>
+</body>
+</html>
