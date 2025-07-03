@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Document Signature</title>
+  <link rel="shortcut icon" href="/assets/images/icon.jpg" type="image/x-icon" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+  <!-- Fabric.js for canvas manipulation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <!-- Alpine.js for reactive components -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="bg-gray-50">
+  <div id="root" class="container mx-auto px-4 py-8" x-data="{ activeTab: 'upload', dragging: false, pdfLoaded: false, documentSigned: false, showDebug: false }">
+    <header class="text-center mb-10 bg-gradient-to-r from-blue-600 to-indigo-600 py-8 rounded-2xl shadow-lg mx-4">
+      <div class="max-w-4xl mx-auto px-6">
+        <div class="flex items-center justify-center">
+          <div class="bg-white/10 p-3 rounded-xl mr-4 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </div>
+          <h1 class="text-4xl font-bold tracking-tight text-white">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">SignAI</span>
+            <span class="text-xs ml-2 bg-white/20 px-2 py-1 rounded-full text-white font-normal">AI-POWERED</span>
+          </h1>
+        </div>
+        <p class="mt-4 text-lg text-blue-100 max-w-2xl mx-auto">Next-generation digital signatures with artificial intelligence verification</p>
+      </div>
+    </header>
+
+    <!-- Debug Info -->
+    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Debug Mode</span>
+        <button @click="showDebug = !showDebug" class="text-sm bg-yellow-500 text-white px-2 py-1 rounded">
+          <span x-show="!showDebug">Show</span>
+          <span x-show="showDebug">Hide</span>
+        </button>
+      </div>
+      <div x-show="showDebug" class="mt-2 text-sm">
+        <p>Alpine.js Status: <span x-text="typeof Alpine !== 'undefined' ? 'Loaded' : 'Not Loaded'"></span></p>
+        <p>Current Tab: <span x-text="activeTab"></span></p>
+        <p>PDF Loaded: <span x-text="pdfLoaded"></span></p>
+        <p>Document Signed: <span x-text="documentSigned"></span></p>
+        <div class="mt-2 space-x-2">
+          <button @click="activeTab = 'upload'" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">Test Upload Tab</button>
+          <button @click="activeTab = 'sign'" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">Test Sign Tab</button>
+          <button @click="activeTab = 'download'" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">Test Download Tab</button>
+          <button @click="pdfLoaded = true" class="px-2 py-1 bg-green-500 text-white text-xs rounded">Set PDF Loaded</button>
+          <button @click="documentSigned = true" class="px-2 py-1 bg-green-500 text-white text-xs rounded">Set Document Signed</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="space-y-6">
+        <!-- Tab Navigation -->
+        <div class="flex space-x-2 border-b border-gray-200 pb-1">
+          <button @click="activeTab = 'upload'"
+                  :class="{ 'bg-blue-100 text-blue-700 shadow-sm': activeTab === 'upload', 'text-gray-500 hover:bg-gray-100': activeTab !== 'upload' }"
+                  class="py-2 px-4 font-medium text-sm rounded-t-lg transition-all duration-200 focus:outline-none flex items-center">
+            <i class="bi bi-upload mr-2"></i> Upload
+            <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-blue-200 text-blue-800" x-show="activeTab === 'upload'">1</span>
+          </button>
+          <button @click="activeTab = 'sign'"
+                  :class="{ 'bg-blue-100 text-blue-700 shadow-sm': activeTab === 'sign', 'text-gray-500 hover:bg-gray-100': activeTab !== 'sign' }"
+                  class="py-2 px-4 font-medium text-sm rounded-t-lg transition-all duration-200 focus:outline-none flex items-center"
+                  :disabled="!pdfLoaded">
+            <i class="bi bi-magic mr-2" x-show="pdfLoaded"></i>
+            <i class="bi bi-lock mr-2" x-show="!pdfLoaded"></i>
+            Sign
+            <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-blue-200 text-blue-800" x-show="activeTab === 'sign'">2</span>
+          </button>
+          <button @click="activeTab = 'download'"
+                  :class="{ 'bg-blue-100 text-blue-700 shadow-sm': activeTab === 'download', 'text-gray-500 hover:bg-gray-100': activeTab !== 'download' }"
+                  class="py-2 px-4 font-medium text-sm rounded-t-lg transition-all duration-200 focus:outline-none flex items-center"
+                  :disabled="!documentSigned">
+            <i class="bi bi-file-earmark-check mr-2"></i>
+            Download
+            <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-blue-200 text-blue-800" x-show="activeTab === 'download'">3</span>
+          </button>
+          <div class="flex-1 relative">
+            <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center text-xs text-gray-400">
+              <span class="bg-gray-100 px-2 py-1 rounded-full flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                </svg>
+                AI Secure
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload Document Tab -->
+        <div x-show="activeTab === 'upload'" x-transition>
+          <div
+            @dragover.prevent="dragging = true"
+            @dragleave="dragging = false"
+            @drop.prevent="handleDrop($event)"
+            :class="{ '!border-blue-500 bg-blue-50 scale-105': dragging }"
+            class="transition-all duration-300 ease-out border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-gray-100 p-10 mb-6 text-center cursor-pointer relative overflow-hidden"
+            id="dropzone">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="relative z-10 space-y-4">
+              <div class="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-800">Upload Your Document</h3>
+              <p class="text-gray-500">Drag & drop PDF file or</p>
+              <button @click="document.getElementById('file-input').click()"
+                      class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm">
+                <i class="bi bi-cloud-arrow-up mr-2"></i> Browse Files
+              </button>
+              <input type="file" id="file-input" class="hidden" accept=".pdf" @change="handleFileSelect($event)" />
+            </div>
+          </div>
+
+          <div id="pdf-container" class="hidden">
+            <canvas id="pdf-preview-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Sign Document Tab -->
+        <div x-show="activeTab === 'sign'" x-transition>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+              <div id="signature-zone" class="relative border border-gray-300 rounded-lg overflow-hidden">
+                <!-- The PDF.js canvas for rendering -->
+                <canvas id="pdf-render-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+                <!-- The Fabric.js canvas for signatures -->
+                <canvas id="fabric-canvas" class="w-full h-full relative z-10"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-gray-50 to-blue-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="font-bold text-xl text-gray-800">Signature Tools</h3>
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center">
+                  <i class="bi bi-stars mr-1"></i> AI Assisted
+                </span>
+              </div>
+
+              <div class="space-y-8">
+                <!-- Hand-Drawn Signature -->
+                <div>
+                  <div class="flex items-center space-x-2 mb-3">
+                    <h4 class="font-medium text-lg text-gray-700">Draw Signature</h4>
+                    <div class="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">Recommended</div>
+                  </div>
+                  <div class="bg-white rounded-xl border border-gray-200 shadow-inner overflow-hidden">
+                    <canvas id="signature-pad" width="300" height="150"></canvas>
+                  </div>
+                  <div class="mt-3 flex space-x-3">
+                    <button id="clear-signature" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center">
+                      <i class="bi bi-eraser mr-1"></i> Clear
+                    </button>
+                    <button id="save-signature" class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 text-sm font-medium flex items-center justify-center">
+                      <i class="bi bi-check-circle mr-1"></i> Apply Signature
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Type Signature -->
+                <div>
+                  <h4 class="font-medium mb-2">Type Signature</h4>
+                  <input type="text" id="signature-text" placeholder="Type your name" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3">
+                    <div class="signature-font-preview" onclick="selectFont('Brush Script MT, cursive')" data-font="Brush Script MT, cursive">
+                      <span style="font-family: 'Brush Script MT', cursive">Signature</span>
+                    </div>
+                    <div class="signature-font-preview" onclick="selectFont('Dancing Script, cursive')" data-font="Dancing Script, cursive">
+                      <span style="font-family: 'Dancing Script', cursive">Signature</span>
+                    </div>
+                    <div class="signature-font-preview" onclick="selectFont('Pacifico, cursive')" data-font="Pacifico, cursive">
+                      <span style="font-family: 'Pacifico', cursive">Signature</span>
+                    </div>
+                    <div class="signature-font-preview" onclick="selectFont('Great Vibes, cursive')" data-font="Great Vibes, cursive">
+                      <span style="font-family: 'Great Vibes', cursive">Signature</span>
+                    </div>
+                    <div class="signature-font-preview" onclick="selectFont('Allura, cursive')" data-font="Allura, cursive">
+                      <span style="font-family: 'Allura', cursive">Signature</span>
+                    </div>
+                    <div class="signature-font-preview" onclick="selectFont('Tangerine, cursive')" data-font="Tangerine, cursive">
+                      <span style="font-family: 'Tangerine', cursive">Signature</span>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <label class="flex items-center">
+                      <input type="color" id="signature-color" value="#000000" class="mr-2">
+                      <span class="text-sm">Signature Color</span>
+                    </label>
+                  </div>
+                  <button id="add-text-signature" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm w-full">Add Signature</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download Tab -->
+        <div x-show="activeTab === 'download'" x-transition>
+          <div class="text-center py-8">
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fb855b61-8ba9-4f6c-9236-35dd56555664.png" alt="Document with a checkmark indicating it's ready for download" class="mx-auto mb-4" />
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Your document is ready!</h2>
+            <p class="text-gray-600 mb-6">Download the signed version of your document</p>
+            <button id="download-pdf" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-lg">
+              <i class="bi bi-download mr-2"></i> Download Signed Document
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center text-gray-500 text-sm mt-12">
+      <p>© 2023 Digital Signature App. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="/assets/js/main.js"></script>
+</body>
+</html>
