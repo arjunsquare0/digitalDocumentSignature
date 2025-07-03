@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '../frontend/views'));
+app.set('views', path.join(__dirname, 'views'));
 // app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
@@ -18,7 +18,7 @@ app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // Serve static files from frontend/assets directory
-app.use('/assets', express.static(path.join(__dirname, '../frontend/assests')));
+app.use('/assets', express.static(path.join(__dirname, '../../frontend/assests')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -30,7 +30,7 @@ app.use('/api', apiRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index'); // Renders backend/views/index.ejs
 });
 
 // Start the server
