@@ -19,7 +19,7 @@ let currentPdfPage = null;
 let signaturesAdded = false; // Track if signatures have been added to canvas
 
 // Backend API URL
-const BACKEND_API_URL = 'http://localhost:5000/api';
+const BACKEND_API_URL = 'https://your-backend-service.onrender.com/api';
 
 // Helper function to safely get Alpine.js data
 function getAlpineData() {
